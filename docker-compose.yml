@@ -1,0 +1,62 @@
+version: '3'
+services:
+    php:
+        container_name: smart_content_app
+        build:
+            context: .
+            dockerfile: image/php/Dockerfile
+        ports:
+            - 9000
+        volumes:
+            - ./src:/var/www/html
+        networks:
+            - main_network
+
+    nginx:
+        build: image/nginx
+        ports:
+            - 80
+        networks:
+            - main_network
+
+    mysql:
+        image: mysql
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+            MYSQL_PASSWORD: "smart-content"
+            MYSQL_USER: "smart-user"
+            MYSQL_DATABASE: "smart-content"
+        ports:
+            - 3306
+        volumes:
+            - ./data/mysql:/var/lib/mysql
+        networks:
+            - main_network
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
+        environment:
+            - cluster.name=docker-cluster
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        ports:
+            - 9200
+        volumes:
+            - ./data/elastic:/usr/share/elasticsearch/data
+        networks:
+            - main_network
+
+    redis:
+        image: redis
+        ports:
+            - 6379
+        networks:
+            - main_network
+
+networks:
+    main_network:
+        driver: bridge
